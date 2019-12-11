@@ -1,0 +1,7 @@
+
+*.DS_Store
+Fire_images
+No_Fire_images
+rar_image_files
+
+*.pkl
