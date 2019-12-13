@@ -27,7 +27,7 @@ from sklearn.externals import joblib
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from PIL import Image
-
+import matplotlib.pyplot as plt
 
 # 111 images
 files = glob.glob("Fire-Detection-Image-Dataset/Fire_images/*")
@@ -57,14 +57,15 @@ frames = [df_fire, df_no_fire]
 
 df_total = pd.concat(frames)
 
+print(len(df_total))
+
 # split the data into train and test
-train, test = train_test_split(df_total, test_size=0.2)
+train, test = train_test_split(df_total, test_size=0.3333)
 
 input_shape = (128, 128, 3)
 num_classes = 1
-batch_size = 9
+batch_size = 7
 epochs = 3
-
 
 def data_gen(df, batch_size):
     while True:
@@ -155,8 +156,9 @@ def rotate90(arr):
             j += 1
             k -= 1
 
+# building the model WITHOUT DATA AUGMENTATION.
+print("building the model WITHOUT data augmentation.")
 
-# building the model.
 model = Sequential()
 model.add(Conv2D(32, kernel_size=(3, 3),
                  activation='relu',
@@ -177,24 +179,117 @@ model.compile(loss=keras.losses.binary_crossentropy,
 
 # fitting the model.
 steps = len(train) // batch_size
-model.fit_generator(generator=data_gen(train, batch_size=batch_size),
+history = model.fit_generator(generator=data_gen(train, batch_size=batch_size),
                     steps_per_epoch=steps,
                     epochs=epochs, verbose=1)
+training_accuracy = int(history.history['acc'][0] * 100)
+print("Model's training accurcy: " + str(training_accuracy) + "%")
 
-steps = len(test) // 1 # 131 is the test dataset's length and is a prime number
-validation_generator = data_gen(test, batch_size=1)
-Y_pred = model.predict_generator(validation_generator, steps)
+steps = len(test) // batch_size
+validation_generator = data_gen(test, batch_size=batch_size)
+
+# there's something wrong with this method that is producing incorrect results.
+# I'm getting all images classified as containing "no_fire".
+Y_pred = model.predict_generator(validation_generator, steps, verbose=1)
 y_pred = np.argmax(Y_pred, axis=1)
-print(y_pred)
 predictions = []
 for i, val in enumerate(y_pred):
     predictions.append([val])
-predictions = np.asarray(predictions)
+# predictions = np.asarray(predictions)
 
 y_true = test[['label']].to_numpy()
 for arr in y_true:
     arr[0] = int(arr[0])
-print(confusion_matrix(y_true, predictions)) # BROKEN
+
+TP = TN = FP = FN = 0
+
+for i in range(len(y_true)):
+    # print(y_true[i][0], predictions[i][0])
+
+    # if the value is true and the prediction was true
+    if y_true[i][0] == 1 and y_true[i][0] == predictions[i][0]:
+        TP += 1
+    # if the value is true and the prediction was false
+    if y_true[i][0] == 1 and y_true[i][0] != predictions[i][0]:
+        FN += 1
+    # if the value is false and the prediction was false
+    if y_true[i][0] == 0 and y_true[i][0] == predictions[i][0]:
+        TN += 1
+    # if the value is false and the prediction was true
+    if y_true[i][0] == 0 and y_true[i][0] != predictions[i][0]:
+        FP += 1
+
+print("TP", TP, "TN", TN, "FP", FP, "FN", FN)
+test_accuracy = ((TP + TN) / (TP + TN + FP + FN))
+print("Model's test accurcy: " + str(test_accuracy) + "%")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# building the model WITH DATA AUGMENTATION.
+print("building the model WITH data augmentation.")
+model = Sequential()
+model.add(Conv2D(32, kernel_size=(3, 3),
+                 activation='relu',
+                 input_shape=input_shape))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation='sigmoid'))
+
+# compiling the model.
+optimizer = keras.optimizers.Adadelta()
+model.compile(loss=keras.losses.binary_crossentropy,
+              optimizer=optimizer,
+              metrics=['accuracy'])
+
+# fitting the model.
+steps = len(train) // batch_size
+history = model.fit_generator(generator=data_gen_with_aug(train,
+                    batch_size=batch_size),
+                    steps_per_epoch=steps,
+                    epochs=epochs, verbose=1)
+training_accuracy = int(history.history['acc'][0] * 100)
+print("Model's training accurcy: " + str(training_accuracy) + "%")
+
+steps = len(test) // batch_size
+validation_generator = data_gen_with_aug(test, batch_size=batch_size)
+
+# there's something wrong with this method that is producing incorrect results.
+# I'm getting all images classified as containing "no_fire".
+Y_pred = model.predict_generator(validation_generator, steps, verbose=1)
+y_pred = np.argmax(Y_pred, axis=1)
+predictions = []
+for i, val in enumerate(y_pred):
+    predictions.append([val])
+# predictions = np.asarray(predictions)
+
+y_true = test[['label']].to_numpy()
+for arr in y_true:
+    arr[0] = int(arr[0])
+
+TP = TN = FP = FN = 0
+
+for i in range(len(y_true)):
+    # print(y_true[i][0], predictions[i][0])
+
+    # if the value is true and the prediction was true
+    if y_true[i][0] == 1 and y_true[i][0] == predictions[i][0]:
+        TP += 1
+    # if the value is true and the prediction was false
+    if y_true[i][0] == 1 and y_true[i][0] != predictions[i][0]:
+        FN += 1
+    # if the value is false and the prediction was false
+    if y_true[i][0] == 0 and y_true[i][0] == predictions[i][0]:
+        TN += 1
+    # if the value is false and the prediction was true
+    if y_true[i][0] == 0 and y_true[i][0] != predictions[i][0]:
+        FP += 1
+
+print("TP", TP, "TN", TN, "FP", FP, "FN", FN)
+test_accuracy = ((TP + TN) / (TP + TN + FP + FN))
+print("Model's test accurcy: " + str(test_accuracy) + "%")
 
 # pickling the model.
 # joblib.dump(model, 'fire_no_fire_classifire.pkl')

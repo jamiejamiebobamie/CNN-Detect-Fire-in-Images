@@ -47,17 +47,9 @@ for i in files:
 df_fire = pd.DataFrame(ls_fire, columns=['Folder', 'filename', 'label'])
 df_no_fire = pd.DataFrame(ls_no_fire, columns=['Folder', 'filename', 'label'])
 
-# if we perform a very simple data augmentation of rotating the fire images 90
-# degrees three times we'll have a total of 444 fire images and 981 total images.
-# a more balanced dataset :).
-target_dataframe_size = len(df_fire)*4 + len(df_no_fire)
-target_dataframe_size = target_dataframe_size
-
 frames = [df_fire, df_no_fire]
 
 df_total = pd.concat(frames)
-
-print(len(df_total))
 
 # split the data into train and test
 train, test = train_test_split(df_total, test_size=0.3333)
@@ -156,6 +148,9 @@ def rotate90(arr):
             j += 1
             k -= 1
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+target_dataframe_size = len(df_total)
 # building the model WITHOUT DATA AUGMENTATION.
 print("building the model WITHOUT data augmentation.")
 
@@ -221,9 +216,19 @@ for i in range(len(y_true)):
 
 print("TP", TP, "TN", TN, "FP", FP, "FN", FN)
 test_accuracy = ((TP + TN) / (TP + TN + FP + FN))
+test_accuracy = int(test_accuracy * 100)
 print("Model's test accurcy: " + str(test_accuracy) + "%")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# if we perform a very simple data augmentation of rotating the fire images 90
+# degrees three times we'll have a total of 444 fire images and 981 total images.
+# a more balanced dataset :).
+target_dataframe_size = len(df_fire)*4 + len(df_no_fire)
+target_dataframe_size = target_dataframe_size
+
+epochs = 5
+
 # building the model WITH DATA AUGMENTATION.
 print("building the model WITH data augmentation.")
 model = Sequential()
@@ -289,6 +294,7 @@ for i in range(len(y_true)):
 
 print("TP", TP, "TN", TN, "FP", FP, "FN", FN)
 test_accuracy = ((TP + TN) / (TP + TN + FP + FN))
+test_accuracy = int(test_accuracy * 100)
 print("Model's test accurcy: " + str(test_accuracy) + "%")
 
 # pickling the model.
