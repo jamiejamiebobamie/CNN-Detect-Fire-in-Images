@@ -18,10 +18,16 @@ and press 'enter'.
 
 ### Prerequisites
 
-Must have all Python packages installed.
+Must have the latest version of Python installed. And the latest versions of these Python packages:
 
 ```
-Give examples
+glob
+PIL
+pandas
+numpy
+keras
+sklearn
+matplotlib
 ```
 
 ## Deployment
