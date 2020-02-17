@@ -2,14 +2,11 @@
 
 This is the repository for my final project for my Data Science 2.2: Introduction to Neural Networks class at Make School. The file: **fire_image_classification.py** contains code that trains and pickles a Convolutional Neural Network to classify images as containing a fire (a label of 1) or no fire (a label of 0).
 
-The trained model has **an accuracy of 91%.**
+The trained model has **an accuracy of 91%**.
 
-The project makes use of images and starter code provided by the professor, located in:
-    **rar_image_files**
-    **image_data_prep.ipynb**
+The project makes use of images and starter code provided by the professor, located in: **rar_image_files** and **image_data_prep.ipynb**, respectfully.
 
-The professor provided a roadmap for students to follow in:
-    **In-class_guidelines.jpg**
+The professor provided a roadmap for students to follow in: **In-class_guidelines.jpg**.
 
 ## Getting Started
 
