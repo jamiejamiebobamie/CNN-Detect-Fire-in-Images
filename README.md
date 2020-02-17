@@ -13,7 +13,8 @@ The professor provided a roadmap for students to follow in: **In-class_guideline
 Clone the repo locally and navigate to the folder in your terminal. Type:
 ```
 python3 fire_image_classification.py
-``` 
+```
+and press 'enter'.
 
 ### Prerequisites
 
